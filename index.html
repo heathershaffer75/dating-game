@@ -347,16 +347,23 @@
     </div>
 
     <script>
-// ------------------------------
-// Profiles array (already in your file above here)
-// ------------------------------
+// --- Minimal demo profiles so the page renders (add yours later) ---
+const profiles = [
+  {
+    name: "HighVibeHealer",
+    gender: "F",
+    age: 34,
+    bio: "Serene, grounded, and plant-loving. Meditation partner preferred.",
+    // You can leave this as .png; the fallback will try .png, then .jpg, etc.
+    imageUrl: "images/profiles/HighVibeHealer.png"
+  }
+];
 
-// Allow PNG/JPG/JPEG/WebP without changing data
+// --- Allow PNG/JPG/JPEG/WebP without changing data ---
 const TRY_EXTS = [".png", ".jpg", ".jpeg", ".webp"];
-
 async function pickImage(basePath) {
   for (const ext of TRY_EXTS) {
-    const url = `${basePath}${ext}`;
+    const url = `${basePath}${ext}?v=${Date.now()}`; // cache-bust
     try {
       const res = await fetch(url, { method: "HEAD", cache: "no-store" });
       if (res.ok) return url;
@@ -365,37 +372,46 @@ async function pickImage(basePath) {
   return "images/profiles/placeholder.png";
 }
 
-// Index to track the current profile
+// --- Grab DOM elements (these were missing) ---
+const profileNameDisplay = document.getElementById("profileName");
+const profileDetailsDisplay = document.getElementById("profileDetails");
+const profileBioDisplay = document.getElementById("profileBio");
+const profileImage = document.getElementById("profileImage");
+
 let currentProfileIndex = 0;
 
-// Function to render the current profile
+// --- Render current profile ---
 function renderProfile() {
-    const profile = profiles[currentProfileIndex];
-    profileNameDisplay.textContent = profile.name;
-    profileDetailsDisplay.textContent = `${profile.gender}, ${profile.age}`;
-    profileBioDisplay.textContent = profile.bio;
+  const profile = profiles[currentProfileIndex];
+  if (profileNameDisplay) profileNameDisplay.textContent = profile.name ?? "";
+  if (profileDetailsDisplay) profileDetailsDisplay.textContent = `${profile.gender ?? ""}, ${profile.age ?? ""}`;
+  if (profileBioDisplay) profileBioDisplay.textContent = profile.bio ?? "";
 
-    // Set image source with fallback for PNG/JPG/etc
-    const base = profile.imageUrl.replace(/\.(png|jpg|jpeg|webp)$/i, "");
-    pickImage(base).then(url => { profileImage.src = url; });
+  const base = (profile.imageUrl ?? "images/profiles/placeholder.png").replace(/\.(png|jpg|jpeg|webp)$/i, "");
+  pickImage(base).then((url) => { if (profileImage) profileImage.src = url; });
 }
 
-// Navigation functions
+// --- Navigation (wire to the actual IDs in your HTML) ---
 function showNextProfile() {
-    currentProfileIndex = (currentProfileIndex + 1) % profiles.length;
-    renderProfile();
+  currentProfileIndex = (currentProfileIndex + 1) % profiles.length;
+  renderProfile();
 }
-
 function showPreviousProfile() {
-    currentProfileIndex = (currentProfileIndex - 1 + profiles.length) % profiles.length;
-    renderProfile();
+  currentProfileIndex = (currentProfileIndex - 1 + profiles.length) % profiles.length;
+  renderProfile();
 }
 
-// Initialize the first profile on page load
+// --- Init ---
 document.addEventListener("DOMContentLoaded", () => {
-    renderProfile();
-    document.getElementById("nextButton").addEventListener("click", showNextProfile);
-    document.getElementById("prevButton").addEventListener("click", showPreviousProfile);
+  // Wire to existing button IDs if present
+  const nextEl = document.getElementById("nextProfile") || document.getElementById("nextButton");
+  const prevEl = document.getElementById("prevProfile") || document.getElementById("prevButton");
+  const restartEl = document.getElementById("restartGame");
+  if (nextEl) nextEl.addEventListener("click", showNextProfile);
+  if (prevEl) prevEl.addEventListener("click", showPreviousProfile);
+  if (restartEl) restartEl.addEventListener("click", () => { currentProfileIndex = 0; renderProfile(); });
+
+  renderProfile();
 });
 </script>
 </body>
